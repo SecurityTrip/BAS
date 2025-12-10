@@ -47,8 +47,7 @@ def upload_mission(master: mavutil.mavlink_connection, items: List[MissionItem],
         time.sleep(0.02)
 
         if (state.last_mission_request_seq != -1 and
-                state.last_mission_request_seq < count and
-                state.last_mission_request_seq >= sent):
+                count > state.last_mission_request_seq >= sent):
 
             seq = state.last_mission_request_seq
             item = items[seq]
