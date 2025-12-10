@@ -24,56 +24,58 @@ def clear_mission(master: mavutil.mavlink_connection) -> None:
         master.target_component
     )
 
-def upload_mission(master: mavutil.mavlink_connection, items: List[MissionItem], state) -> None:  # Добавлен state
+def upload_mission(master: mavutil.mavlink_connection, items: List[MissionItem], state) -> None:
     count = len(items)
     if count == 0:
         return
+
+    state.last_mission_request_seq = -1
+    state.last_mission_ack_type = -1
+
+    print(f"Отправляю MISSION_COUNT = {count}")
     master.mav.mission_count_send(
         master.target_system,
         master.target_component,
-        count
+        count,
+        mavutil.mavlink.MAV_MISSION_TYPE_MISSION
     )
+
     sent = 0
-    last_seq = -1
-    last_ack = -1
-    timeout = time.time() + 30  # Общий таймаут
-    while sent < count and time.time() < timeout:
-        # Ожидаем изменения в DroneState вместо recv_match
-        if state.last_mission_request_seq != last_seq:
+    timeout = time.time() + 30
+
+    while time.time() < timeout:
+        time.sleep(0.02)
+
+        if (state.last_mission_request_seq != -1 and
+                state.last_mission_request_seq < count and
+                state.last_mission_request_seq >= sent):
+
             seq = state.last_mission_request_seq
-            last_seq = seq
-            if seq < 0 or seq >= count:
-                continue
             item = items[seq]
+            print(f"→ Отправляю waypoint {seq}")
+
             master.mav.mission_item_int_send(
                 master.target_system,
                 master.target_component,
-                item.seq,
+                seq,
                 item.frame,
                 item.command,
                 item.current,
                 item.autocontinue,
-                item.param1,
-                item.param2,
-                item.param3,
-                item.param4,
-                item.x,
-                item.y,
-                item.z,
+                item.param1, item.param2, item.param3, item.param4,
+                item.x, item.y, item.z,
                 mavutil.mavlink.MAV_MISSION_TYPE_MISSION
             )
-            sent += 1
-        if state.last_mission_ack_type != last_ack:
-            last_ack = state.last_mission_ack_type
-            if last_ack == mavutil.mavlink.MAV_MISSION_ACCEPTED:
+            sent = seq + 1
+
+        if state.last_mission_ack_type != -1 and sent >= count:
+            if state.last_mission_ack_type == mavutil.mavlink.MAV_MISSION_ACCEPTED:
                 print("MISSION_ACK: миссия принята.")
-                break
+                return
             else:
-                print(f"MISSION_ACK: ошибка {last_ack}.")
-                raise ValueError(f"Ошибка загрузки миссии: {last_ack}")
-        time.sleep(0.1)  # Небольшая пауза для проверки состояния
-    if sent < count:
-        raise TimeoutError("Таймаут загрузки миссии.")
+                raise RuntimeError(f"Ошибка миссии: {state.last_mission_ack_type}")
+
+    raise TimeoutError("Таймаут загрузки миссии.")
 
 def download_mission(master: mavutil.mavlink_connection) -> List[MissionItem]:
     # Без изменений, так как не требует рефакторинга для непрерывности

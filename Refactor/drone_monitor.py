@@ -52,8 +52,10 @@ def monitor_loop(master: mavutil.mavlink_connection, state: DroneState, stop_fla
             _handle_global_position_int(msg, state)
         elif msg_type == 'SYS_STATUS':
             _handle_sys_status(msg, state)
-        elif msg_type == 'MISSION_REQUEST_INT':
-            _handle_mission_request_int(msg, state)
+        elif msg_type in ('MISSION_REQUEST', 'MISSION_REQUEST_INT'):
+            state.last_mission_request_seq = msg.seq
+            print(f"[DEBUG] ← MISSION_REQUEST seq={msg.seq}")
         elif msg_type == 'MISSION_ACK':
-            _handle_mission_ack(msg, state)
+            state.last_mission_ack_type = msg.type
+            print(f"[DEBUG] ← MISSION_ACK type={msg.type} ({'ACCEPTED' if msg.type == 0 else 'ERROR'})")
         state.last_update = now

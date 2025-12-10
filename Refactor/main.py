@@ -6,8 +6,12 @@ from drone_monitor import DroneState, monitor_loop
 from mission_control import clear_mission, upload_mission, MissionItem
 from flight_control import arm, takeoff, land, set_mode_guided, set_mode_auto
 
-def connect(connection_string: str = "tcp:127.0.0.1:14550") -> mavutil.mavlink_connection:
-    master = mavutil.mavlink_connection(connection_string)
+def connect(connection_string: str = "udpin:127.0.0.1:14550") -> mavutil.mavlink_connection:
+    master = mavutil.mavlink_connection(
+        connection_string,
+        source_system=255,
+        source_component=190
+    )
     result = master.wait_heartbeat(timeout=1)
     if result is None:
         return None
