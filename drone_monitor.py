@@ -12,8 +12,8 @@ class DroneState:
     alt_rel_m: float = 0.0
     battery_voltage_v: float = 0.0
     battery_remaining_pct: float = 0.0
-    last_mission_request_seq: int = -1  # Новый: Последний запрошенный seq миссии
-    last_mission_ack_type: int = -1     # Новый: Тип последнего ACK (0=ACCEPTED, etc.)
+    last_mission_request_seq: int = -1
+    last_mission_ack_type: int = -1
 
 def _handle_heartbeat(master, msg, state: DroneState) -> None:
     state.armed = bool(msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED)

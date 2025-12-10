@@ -77,7 +77,6 @@ def upload_mission(master: mavutil.mavlink_connection, items: List[MissionItem],
     raise TimeoutError("Таймаут загрузки миссии.")
 
 def download_mission(master: mavutil.mavlink_connection) -> List[MissionItem]:
-    # Без изменений, так как не требует рефакторинга для непрерывности
     master.mav.mission_request_list_send(
         master.target_system,
         master.target_component

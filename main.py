@@ -41,7 +41,6 @@ def create_mission_circle_1km_with_return(state: DroneState, altitude_m: float =
     center_lat = state.lat_deg
     center_lon = state.lon_deg
 
-    # Приблизительные метры на градус (для широты ~55–60°, как в Москве/Питере — ошибка <1 м)
     METERS_PER_DEG_LAT = 111194.9267
     METERS_PER_DEG_LON = METERS_PER_DEG_LAT * math.cos(math.radians(center_lat))
 
